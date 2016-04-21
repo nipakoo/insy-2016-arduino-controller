@@ -1,46 +1,59 @@
-var express = require('express');
-var app = express();
-var httpServer = require("http").createServer(app);
 var five = require("johnny-five");
-var io = require('socket.io')(httpServer);
 
 var Firebase = require('firebase');
 var rootRef = new Firebase('https://insy-2016-web.firebaseio.com/');
 
-var PORT = 3000;
+rootRef.authWithPassword({
+  email: 'locker_system@example.com',
+  password: 'insy2016'
+}, function() {
+  console.log("auth");
+});
 
-var pins = process.argv;
+var button_pin = process.argv[2];
+var servo_pin = process.argv[3];
 
-httpServer.listen(PORT);  
-console.log('Server available at http://localhost:' + PORT);  
-var relay;
+var button;
+var servo;
+
+var changed_package;
 
 //Arduino board connection
 var board = new five.Board();  
 board.on("ready", function() {  
   console.log('Arduino connected');
 
-  pins.forEach(function (element, index) {
-    pins[index] = {
-      pin: element,
-      relay: new five.Relay(pin)
+  button = new Button(button_pin)
+  servo = new Servo(servo_pin);
+
+  button.on('hold', function (data) {
+    console.log("Door closed");
+
+    if (changed_package.is_sending) {
+      changed_package.update({
+        is_sending: false
+      });
     }
   });
 });
 
-// TODO: communicate with firebase?
-//Socket connection handler
-io.on('connection', function (socket) {  
-  console.log("socket id: " + socket.id)        
+rootRef.child("packages").on("child_changed", function (snapshot) {
+  console.log("received");
+  changed_package = snapshot.val();
 
-  socket.on('door:open', function (data) {    
-    pins[data.pin].relay.open()
-    console.log("Door on pin " + data.pin + " opened");
-  });
-  socket.on('door:close', function (data) {
-    pins[data.pin].relay.close()
-    console.log("Door on pin " + data.pin + " closed");
-  });
+  if (changed_package.is_sending) {
+    //servo.max();
+    testing();
+  }
 });
+
+function testing() {
+  if (changed_package.is_sending) {
+    changed_package.update({
+      is_sending: false
+    });
+  }
+  console.log("Door closed");
+}
 
 console.log('Waiting for connection'); 
