@@ -1,0 +1,24 @@
+{
+  "name": "insy-2016-arduino-controller",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nipakoo/insy-2016-arduino-controller.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nipakoo/insy-2016-arduino-controller/issues"
+  },
+  "homepage": "https://github.com/nipakoo/insy-2016-arduino-controller#readme",
+  "dependencies": {
+    "firebase": "^2.4.2",
+    "johnny-five": "^0.9.43"
+  }
+}
