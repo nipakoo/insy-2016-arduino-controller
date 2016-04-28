@@ -11,16 +11,26 @@ rootRef.authWithPassword({
     console.log('Login Failed!', error);
   } else {
     console.log('Authenticated successfully!');
-    setupFirebaseListeners();
   }
 });
+
+var activePackage = null;
 
 var setupFirebaseListeners = function () {
   this.updatePackage = function (snapshot) {
     var ref = snapshot.ref();
     var data = snapshot.val();
 
-    package.updateStatus(ref, data);
+    if (data.is_sending || data.is_receiving) {
+      activePackage = {
+        ref: ref,
+        data: data
+      };
+
+      servo.to(90);
+      led.blink();
+      console.log('Open door');
+    }
   };
 
   rootRef.child('packages').on('child_added', this.updatePackage);
@@ -61,9 +71,6 @@ var package = (function () {
   };
 })();
 
-//var button_pin = process.argv[2];
-//var servo_pin = process.argv[3];
-
 var button;
 var servo;
 var led;
@@ -77,36 +84,30 @@ var board = new five.Board();
 board.on('ready', function() {
   console.log('Arduino connected');
 
+  var authData = rootRef.getAuth();
+
+  if (authData) {
+    console.log('Setting FireBase listeners');
+    setupFirebaseListeners();
+  }
+
   button = new five.Button(button_pin);
   led = new five.Led(led_pin);
   servo = new five.Servo({
       pin: servo_pin,
-      center: true});
+      center: true
+  });
 
   button.on('down', function (data) {
     console.log('Door closed');
 
-        //for testing purposes
-        led.stop().off();
-        servo.to(90);
-       
-//      if (changed_package.is_sending) {
-//      changed_package.update({
-//        is_sending: false
-//      });
-//    } else if (changed_package.is_receiving) {
-//      changed_package.update({
-//        is_receiving: false
-//      });
-//    }
-  });
-    
-    button.on('up', function (data) {
-        console.log('Door opened');
-          
-        //for testing purposes
-        led.blink();
-        servo.to(0);
+    led.stop().off();
+    servo.to(0);
+
+    if (activePackage) {
+      package.updateStatus(activePackage.ref, activePackage.data);
+      activePackage = null; // reset package
+    }
   });
 });
 
