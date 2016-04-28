@@ -61,33 +61,52 @@ var package = (function () {
   };
 })();
 
-var button_pin = process.argv[2];
-var servo_pin = process.argv[3];
+//var button_pin = process.argv[2];
+//var servo_pin = process.argv[3];
 
 var button;
 var servo;
+var led;
+
+var led_pin = 13;
+var button_pin = 2;
+var servo_pin = 9;
 
 var board = new five.Board();
 
 board.on('ready', function() {
   console.log('Arduino connected');
 
-  button = new Button(button_pin);
-  servo = new Servo(servo_pin);
+  button = new five.Button(button_pin);
+  led = new five.Led(led_pin);
+  servo = new five.Servo({
+      pin: servo_pin,
+      center: true});
 
-  button.on('hold', function (data) {
+  button.on('down', function (data) {
     console.log('Door closed');
 
-    servo.min();
-    if (changed_package.is_sending) {
-      changed_package.update({
-        is_sending: false
-      });
-    } else if (changed_package.is_receiving) {
-      changed_package.update({
-        is_receiving: false
-      });
-    }
+        //for testing purposes
+        led.stop().off();
+        servo.to(90);
+       
+//      if (changed_package.is_sending) {
+//      changed_package.update({
+//        is_sending: false
+//      });
+//    } else if (changed_package.is_receiving) {
+//      changed_package.update({
+//        is_receiving: false
+//      });
+//    }
+  });
+    
+    button.on('up', function (data) {
+        console.log('Door opened');
+          
+        //for testing purposes
+        led.blink();
+        servo.to(0);
   });
 });
 
